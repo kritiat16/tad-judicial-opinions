@@ -163,11 +163,11 @@ def run_legal_bert(opinions):
 
 
 def run_gte(opinions):
-    print("\n[3/3] GTE  (thenlper/gte-large)")
+    print("\n[3/3] GTE  (thenlper/gte-base)")
     t0 = time.time()
     result = run_transformer_model(
         opinions,
-        model_name="thenlper/gte-large",
+        model_name="thenlper/gte-base",
         emb_filename="gte_embeddings.npy",
         ids_filename="gte_ids.json",
     )
