@@ -53,7 +53,7 @@ Year counts below are by `side_a_year` (the representative "newer" case for each
 
 ### Topic distribution
 
-Counts use the normalized `subject_area` column. Note that `split_019` carries a source typo (`Bankrupcy Law`) — counted here under `Bankruptcy`.
+Counts use the normalized `subject_area` column.
 
 | Subject area | Count |
 |---|---|
@@ -116,4 +116,4 @@ We aimed for balance across year, topic, and circuit, but several structural con
 
 ## How to use
 
-Pipeline code reads `circuit_splits.csv`, joins to opinion text fetched from CourtListener using the `side_a_citation` / `side_b_citation` columns (or `courtlistener_a_url` / `courtlistener_b_url` where populated), and uses the Side A / Side B structure as labeled positive and negative pairs for model evaluation. See `CODEBOOK.md` for column-level details, including notes on the `scotus_resolved` flag — rows marked `pending / check later` or `cert granted / check later` should be verified against current SCOTUS dockets before treating them as unresolved splits.
+Pipeline code reads `circuit_splits.csv`, joins to opinion text fetched from CourtListener using the `side_a_citation` / `side_b_citation` columns, and uses the Side A / Side B structure as labeled positive and negative pairs for model evaluation. See `CODEBOOK.md` for column-level details, including notes on the `scotus_resolved` flag — rows marked `pending / check later` or `cert granted / check later` should be verified against current SCOTUS dockets before treating them as unresolved splits.
