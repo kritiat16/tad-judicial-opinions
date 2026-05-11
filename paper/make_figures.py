@@ -62,7 +62,8 @@ def main() -> None:
                  fontsize=12, pad=12)
     ax.set_xticks(x)
     ax.set_xticklabels(models, fontsize=11)
-    ax.legend(loc="lower left", frameon=False, fontsize=9)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.12),
+              ncol=2, frameon=False, fontsize=10)
     ax.spines[["top", "right"]].set_visible(False)
     ax.set_ylim(0, 1.0)
 
@@ -76,7 +77,8 @@ def main() -> None:
                     xy=(i, ymax + 0.03),
                     ha="center", fontsize=9, color="#333")
 
-    plt.tight_layout()
+    plt.subplots_adjust(bottom=0.18)
+    plt.tight_layout(rect=[0, 0.05, 1, 1])
     out_path = OUT_DIR / "fig1_validation_results.png"
     plt.savefig(out_path, dpi=200, bbox_inches="tight")
     plt.savefig(OUT_DIR / "fig1_validation_results.pdf", bbox_inches="tight")
