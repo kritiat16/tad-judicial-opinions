@@ -57,11 +57,10 @@ Counts use the normalized `subject_area` column.
 
 | Subject area | Count |
 |---|---|
+| Criminal Law & Procedure | 8 |
 | Civil Rights | 5 |
-| Criminal Law & Procedure | 5 |
 | Immigration | 5 |
 | Civil Procedure | 4 |
-| Criminal Procedure | 3 |
 | Labor & Employment | 3 |
 | Bankruptcy | 2 |
 | Arbitration | 1 |
