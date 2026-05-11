@@ -15,6 +15,18 @@ build/
 # HuggingFace model cache
 .cache/
 
+# Large regeneratable embedding files
+embeddings/*.npy
+embeddings/*.npz
+
+# LaTeX intermediates
+*.aux
+*.log
+*.toc
+*.out
+*.fls
+*.fdb_latexmk
+
 # OS
 .DS_Store
 Thumbs.db
