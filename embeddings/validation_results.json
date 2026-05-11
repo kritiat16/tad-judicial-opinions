@@ -1,0 +1,17 @@
+{
+  "n_splits_total": 30,
+  "n_opinions_fetched": 58,
+  "evaluation_mode": "standalone_inline",
+  "models": [
+    {
+      "model": "TF-IDF",
+      "within_split_ab_mean": 0.1252,
+      "random_baseline_mean": 0.0863,
+      "gap": -0.039,
+      "discrimination_rate": 0.5,
+      "n_evaluated": 28,
+      "n_skipped": 2,
+      "interpretation": "NEUTRAL"
+    }
+  ]
+}

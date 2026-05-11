@@ -109,23 +109,30 @@ def extract_text(data: dict) -> str:
 
 
 def fetch_json(url: str, headers: dict) -> dict | None:
-    """GET a JSON endpoint; retry once on 5xx, skip on 4xx."""
-    for attempt in range(2):
+    """GET a JSON endpoint; handles 429 rate-limit with backoff, retries once on 5xx."""
+    MAX_ATTEMPTS = 4
+    for attempt in range(MAX_ATTEMPTS):
         try:
             resp = requests.get(url, headers=headers, timeout=20)
             if resp.status_code == 200:
                 return resp.json()
+            if resp.status_code == 429:
+                wait = int(resp.headers.get("Retry-After", 30))
+                print(f"rate-limited (429) — waiting {wait}s then retrying...")
+                time.sleep(wait)
+                continue
             if 400 <= resp.status_code < 500:
                 print(f"HTTP {resp.status_code} — skipping (4xx, no retry)")
                 return None
-            if attempt == 0:
+            # 5xx
+            if attempt < MAX_ATTEMPTS - 1:
                 print(f"HTTP {resp.status_code} — retrying in 10s")
                 time.sleep(10)
             else:
-                print(f"HTTP {resp.status_code} — giving up")
+                print(f"HTTP {resp.status_code} — giving up after {MAX_ATTEMPTS} attempts")
                 return None
         except requests.RequestException as exc:
-            if attempt == 0:
+            if attempt < MAX_ATTEMPTS - 1:
                 print(f"request error: {exc} — retrying in 5s")
                 time.sleep(5)
             else:
@@ -179,7 +186,7 @@ def main() -> None:
             print(f"  Fetching {op_id} (CL {cl_id})...", end=" ", flush=True)
 
             data = fetch_json(url, headers)
-            time.sleep(0.5)
+            time.sleep(2.0)
 
             if data is None:
                 print("FAILED")
