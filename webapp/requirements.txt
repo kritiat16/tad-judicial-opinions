@@ -3,7 +3,4 @@ numpy
 scipy
 scikit-learn
 pandas
-transformers
-torch
-requests
-matplotlib
+plotly

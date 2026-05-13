@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import ast; ast.parse\\(open\\('webapp/app.py', encoding='utf-8'\\).read\\(\\)\\); print\\('syntax OK'\\)\")",
+      "Bash(python -c \"import streamlit, pandas, sklearn, numpy, scipy, pickle; print\\('all imports OK'\\)\")"
+    ]
+  }
+}
