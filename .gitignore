@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyc
 .venv/
 venv/
 env/
@@ -15,9 +16,9 @@ build/
 # HuggingFace model cache
 .cache/
 
-# Large regeneratable embedding files
-embeddings/*.npy
-embeddings/*.npz
+# Embedding files (small enough to track — remove these two lines)
+# embeddings/*.npy
+# embeddings/*.npz
 
 # LaTeX intermediates
 *.aux
@@ -30,3 +31,12 @@ embeddings/*.npz
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code internal
+.claude/
+
+# Devcontainer
+.devcontainer/
+
+# Processed data (regeneratable from raw)
+data/processed/
