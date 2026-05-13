@@ -6,6 +6,9 @@ Do NLP embedding models capture legal *stance* or just legal *topic*? We evaluat
 
 ---
 
+Report Link: https://drive.google.com/drive/folders/18WVH5ydkYvd_b5xDjlpHlDKNK--ybEP1?usp=sharing 
+Live Web App Link: https://tad-judicial-opinions-s26.streamlit.app/
+
 ## The four-step pipeline
 
 | Step | What it does |
