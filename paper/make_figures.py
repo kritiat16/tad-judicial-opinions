@@ -69,7 +69,7 @@ def main() -> None:
 
     # Annotate gap above each pair; use 4 decimal places when gap rounds to ±0.000
     for i, m in enumerate(models):
-        gap = within[i] - random_b[i]
+        gap = random_b[i] - within[i]
         sign = "+" if gap >= 0 else ""
         decimals = 4 if abs(gap) < 0.0005 else 3
         ymax = max(within[i], random_b[i])
