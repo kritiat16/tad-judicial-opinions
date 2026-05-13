@@ -30,3 +30,19 @@ embeddings/*.npz
 # OS
 .DS_Store
 Thumbs.db
+# Python cache
+__pycache__/
+*.pyc
+
+# Large embedding files
+embeddings/*.npy
+embeddings/*.npz
+
+# Claude Code internal
+.claude/
+
+# Devcontainer
+.devcontainer/
+
+# Processed data (regeneratable)
+data/processed/
