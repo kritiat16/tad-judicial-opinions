@@ -46,6 +46,8 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import mannwhitneyu
+from sklearn.metrics import average_precision_score
 
 sys.path.insert(0, str(Path(__file__).parent))
 from preprocess import clean
@@ -82,7 +84,7 @@ def check_preconditions() -> None:
         sys.exit(1)
     for p in optional:
         if not p.exists():
-            print(f"[WARN]  Optional file missing — skipping that model: {p.name}")
+            print(f"[WARN]  Optional file missing -- skipping that model: {p.name}")
 
 
 # ── Data loading ──────────────────────────────────────────────────────────────
@@ -95,7 +97,7 @@ def load_validation_opinions() -> list[dict]:
     valid = [op for op in ops if op["clean_text"].strip()]
     dropped = len(ops) - len(valid)
     if dropped:
-        print(f"  [WARN] {dropped} opinion(s) had empty text after cleaning — skipped")
+        print(f"  [WARN] {dropped} opinion(s) had empty text after cleaning -- skipped")
     return valid
 
 
@@ -199,7 +201,7 @@ def evaluate_model(
     if len(within_sims) < 3:
         print(
             f"  [SKIP] {model_name}: only {len(within_sims)} splits evaluable "
-            "(need ≥ 3).  Were both sides fetched successfully?"
+            "(need >= 3).  Were both sides fetched successfully?"
         )
         return None
 
@@ -232,11 +234,45 @@ def evaluate_model(
     disc_rate = disc / len(within_sims)
 
     if gap > 0.05:
-        interp = "GOOD  — A↔B below baseline"
+        interp = "GOOD  -- A<->B below baseline"
     elif gap > -0.05:
         interp = "NEUTRAL"
     else:
-        interp = "BAD   — A↔B above baseline"
+        interp = "BAD   -- A<->B above baseline"
+
+    # PR AUC: label=1 for every evaluable within-split A↔B pair, 0 for all others.
+    # Use ALL unique unordered pairs from available validation opinions so the
+    # denominator matches the actual corpus (not a random sample).
+    within_pair_set = {
+        tuple(sorted([id_a, id_b])) for _, id_a, id_b, _ in within_sims
+    }
+    avail_ids = [oid for oid in all_val_ids if oid in id_to_pos]
+    pr_labels: list[int] = []
+    pr_scores: list[float] = []
+    for ii in range(len(avail_ids)):
+        for jj in range(ii + 1, len(avail_ids)):
+            oid_a, oid_b = avail_ids[ii], avail_ids[jj]
+            pair = tuple(sorted([oid_a, oid_b]))
+            pr_labels.append(1 if pair in within_pair_set else 0)
+            pr_scores.append(float(sim_matrix[id_to_pos[oid_a], id_to_pos[oid_b]]))
+
+    pr_labels_arr = np.array(pr_labels)
+    pr_scores_arr = np.array(pr_scores)
+    n_positive = int(pr_labels_arr.sum())
+    n_total = len(pr_labels_arr)
+    chance_level = round(n_positive / n_total, 4) if n_total > 0 else 0.0
+    pr_auc = (
+        round(float(average_precision_score(pr_labels_arr, pr_scores_arr)), 4)
+        if n_positive > 0 else 0.0
+    )
+    pr_auc_interp = "ABOVE CHANCE" if pr_auc >= 2 * chance_level else "AT CHANCE"
+
+    # Mann-Whitney U test: within-split A<->B scores vs all cross-split scores
+    within_scores_mwu = pr_scores_arr[pr_labels_arr == 1]
+    cross_scores_mwu = pr_scores_arr[pr_labels_arr == 0]
+    mwu_result = mannwhitneyu(within_scores_mwu, cross_scores_mwu, alternative="two-sided")
+    mwu_u = round(float(mwu_result.statistic), 1)
+    mwu_p = round(float(mwu_result.pvalue), 4)
 
     return {
         "model": model_name,
@@ -244,6 +280,11 @@ def evaluate_model(
         "random_baseline_mean": round(random_mean, 4),
         "gap": round(gap, 4),
         "discrimination_rate": round(disc_rate, 3),
+        "pr_auc": pr_auc,
+        "chance_level": chance_level,
+        "pr_auc_interpretation": pr_auc_interp,
+        "mwu_u": mwu_u,
+        "mwu_p": mwu_p,
         "n_evaluated": len(within_sims),
         "n_skipped": n_skipped,
         "interpretation": interp,
@@ -276,7 +317,7 @@ def main() -> None:
         print(f"\n  Mode: full-pipeline ({len(val_ids_in_index)} validation IDs found in index)")
     else:
         print(
-            f"\n  Mode: standalone — validation IDs not yet in opinion index "
+            f"\n  Mode: standalone -- validation IDs not yet in opinion index "
             f"({len(val_ids_in_index)}/{len(opinions)} found).\n"
             f"  Computing embeddings inline from fetched text.\n"
             f"  Tip: re-run preprocess.py + embed.py on the combined dataset "
@@ -353,14 +394,17 @@ def main() -> None:
     results.sort(key=lambda x: x["gap"], reverse=True)
 
     # ── Output table ──────────────────────────────────────────────────────────
-    W = 100
+    W = 140
     print("\n" + "=" * W)
-    print("Results — ranked by gap  (random_baseline − within_split A↔B)")
+    print("Results -- ranked by gap  (random_baseline - within_split A<->B)")
     print("Positive gap = model pushes legally-opposing pairs below random baseline (better)")
+    print(f"PR AUC chance level ~= n_positive / n_total  (AT CHANCE = within 2x chance)")
+    print(f"MWU: Mann-Whitney U, two-sided  (p < 0.05 = within-split scores differ from cross-split)")
     print("=" * W)
     hdr = (
-        f"{'Model':<13} {'Within A↔B':>11} {'Random base':>12} "
-        f"{'Gap':>8} {'Disc rate':>10}  {'Interpretation'}"
+        f"{'Model':<13} {'Within A<->B':>11} {'Random base':>12} "
+        f"{'Gap':>8} {'Disc rate':>10} {'PR AUC':>8} {'Chance':>8}  "
+        f"{'PR interp':<14}  {'MWU U':>10} {'MWU p':>8}  {'Gap interp'}"
     )
     print(hdr)
     print("-" * W)
@@ -368,7 +412,10 @@ def main() -> None:
         print(
             f"{r['model']:<13} {r['within_split_ab_mean']:>11.4f} "
             f"{r['random_baseline_mean']:>12.4f} {r['gap']:>8.4f} "
-            f"{r['discrimination_rate']:>10.3f}  {r['interpretation']}"
+            f"{r['discrimination_rate']:>10.3f} {r['pr_auc']:>8.4f} "
+            f"{r['chance_level']:>8.4f}  {r['pr_auc_interpretation']:<14}  "
+            f"{r['mwu_u']:>10.1f} {r['mwu_p']:>8.4f}  "
+            f"{r['interpretation']}"
         )
     print("=" * W)
 
@@ -376,7 +423,7 @@ def main() -> None:
     n_eval = best["n_evaluated"]
     print(f"\nEvaluated on {n_eval} split(s) with both sides successfully fetched.")
     print(
-        "Within-side positives (A↔A across same-subject splits) not computed —\n"
+        "Within-side positives (A<->A across same-subject splits) not computed --\n"
         "no cross-split side-alignment data available in the current CSV."
     )
 
@@ -390,7 +437,7 @@ def main() -> None:
     }
     with open(RESULTS_PATH, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
-    print(f"\nResults saved → {RESULTS_PATH}")
+    print(f"\nResults saved -> {RESULTS_PATH}")
 
 
 if __name__ == "__main__":
