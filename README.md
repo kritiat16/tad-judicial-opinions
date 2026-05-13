@@ -85,12 +85,6 @@ streamlit run webapp/app.py
 
 ## Citation
 
-If you use the validation dataset or pipeline, please cite:
-
-> Ajay, K. & Chen, F. (2026). Topic, Not Stance: A Validation
-> Framework for Legal Opinion Similarity Using Circuit Splits.
-> NYU Text as Data course project.
-
 This project extends:
 > Ganguli, I., Lin, J., Meursault, V., & Reynolds, N. (2024).
 > Patent Text and Long-Run Innovation Dynamics: The Critical
